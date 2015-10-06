@@ -187,11 +187,12 @@ func (s *sc) comment() {
 }
 
 const dec = "0123456789"
-const hex = dec + "ABCDEF"
+const hhex = "ABCDEF"
+const hex = dec + hhex
 
 //const non = "01234WXYZ"
 //const tri = "-0+"
-const modifier = "HU"
+const modifier = "U"
 
 //first char always 0..9
 func (s *sc) num() (sym Symbol) {
@@ -217,6 +218,9 @@ func (s *sc) num() (sym Symbol) {
 	if strings.ContainsRune(modifier, s.ch) {
 		mbuf = append(mbuf, s.ch)
 		s.next()
+	}
+	if strings.ContainsAny(string(buf), hhex) && len(mbuf) == 0 {
+		s.mark("modifier expected")
 	}
 	if s.err == nil {
 		sym.Code = Number
@@ -266,7 +270,7 @@ func (s *sc) get() (sym Symbol) {
 		} else {
 			sym.Code = Colon
 		}
-	case '@':
+	case '#':
 		sym.Code = Link
 		s.next()
 	case ';':

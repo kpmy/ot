@@ -25,8 +25,7 @@ func TestScanner(t *testing.T) {
 				prop:;
 
 			0.125
-
-			0FFH 0DU
+			0DU
 			seek: fas blab(bubub) "dfsdf";
 			;
 		;
@@ -41,13 +40,27 @@ func TestScanner(t *testing.T) {
 func TestParser(t *testing.T) {
 	const testTemplate = `
 	block:
-		child0(par):
-			unique :: блаб;
-			child1: child3;
+		blob.child0(par):
+			unique ::
+				блаб
+			;
+			"стринг"
+			3323
+			1.333
+			0DU
+			child1:
+				child3
+			;
 		;
-		child2: @par;
-		child3: @par;
+		child2:
+			#par
+		;
+		child3:
+			#par
+		;
 	;`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
-	p.Template()
+	if t, err := p.Template(); err == nil {
+		prettyPrint(t)
+	}
 }

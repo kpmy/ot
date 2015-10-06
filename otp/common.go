@@ -2,10 +2,12 @@ package otp
 
 import (
 	"fmt"
+	"github.com/kpmy/ot/ir/types"
 	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/halt"
 	"log"
+	"strconv"
 )
 
 type mark struct {
@@ -127,6 +129,39 @@ func (p *common) ident() string {
 	assert.For(p.sym.Code == ots.Ident, 20, "identifier expected")
 	//добавить валидацию идентификаторов
 	return p.sym.Value
+}
+
+func (p *common) number() (t types.Type, v interface{}) {
+	assert.For(p.is(ots.Number), 20, "number expected here")
+	switch p.sym.NumberOpts.Modifier {
+	case "":
+		if p.sym.NumberOpts.Period {
+			t, v = types.REAL, p.sym.Value
+		} else {
+			//x, err := strconv.Atoi(p.sym.Str)
+			//assert.For(err == nil, 40)
+			t, v = types.INTEGER, p.sym.Value
+		}
+	case "U":
+		if p.sym.NumberOpts.Period {
+			p.mark("hex integer value expected")
+		}
+		//fmt.Println(p.sym)
+		if r, err := strconv.ParseUint(p.sym.Value, 16, 64); err == nil {
+			t = types.CHAR
+			v = rune(r)
+		} else {
+			p.mark("error while reading integer")
+		}
+	case "H":
+		if p.sym.NumberOpts.Period {
+			p.mark("hex integer value expected")
+		}
+		t, v = types.INTEGER, p.sym.Value
+	default:
+		p.mark("unknown number format `", p.sym.NumberOpts.Modifier, "`")
+	}
+	return
 }
 
 func (p *common) is(sym ots.SymCode) bool {
