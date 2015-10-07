@@ -74,6 +74,7 @@ func (p *pr) block() {
 				p.emit(&ir.Put{Type: types.LINK, Value: p.ident()})
 				p.next()
 			case ots.Semicolon:
+				e.ChildCount--
 				stop = true
 			default:
 				p.mark("unexpected ", p.sym)
@@ -86,6 +87,9 @@ func (p *pr) block() {
 		inner(this)
 		p.expect(ots.Semicolon, "semicolon expected")
 		p.emit(&ir.Rise{})
+		if this.ChildCount == 0 {
+			p.mark("empty block :/:: is redundant")
+		}
 		p.next()
 	}
 	if p.await(ots.Colon, ots.Delimiter) {
@@ -118,7 +122,7 @@ func (p *pr) Template() (ret *ir.Template, err error) {
 func ConnectTo(sc ots.Scanner) Parser {
 	ret := &pr{}
 	ret.sc = sc
-	ret.debug = true
+	ret.debug = false
 	ret.next()
 	ret.init()
 	return ret

@@ -270,7 +270,7 @@ func (s *sc) get() (sym Symbol) {
 		} else {
 			sym.Code = Colon
 		}
-	case '#':
+	case '@':
 		sym.Code = Link
 		s.next()
 	case ';':

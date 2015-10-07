@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/kpmy/ot/ir"
 	"github.com/kpmy/ot/ir/types"
+	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"log"
@@ -51,7 +52,7 @@ func prettyPrint(t *ir.Template) {
 			case types.CHAR:
 				fmt.Fprint(wr, "0", strings.ToUpper(strconv.FormatUint(uint64(s.Value.(rune)), 16)), "U")
 			case types.LINK:
-				fmt.Fprint(wr, "#", s.Value)
+				fmt.Fprint(wr, "@", s.Value)
 			default:
 				halt.As(100, s.Type)
 			}
@@ -61,4 +62,28 @@ func prettyPrint(t *ir.Template) {
 		}
 	}
 	log.Print(wr.String())
+}
+
+func prettyPrintObject(o otm.Object) {
+	parent := ""
+	for x := o.Parent(); !fn.IsNil(x); x = x.Parent() {
+		parent = fmt.Sprint(x.Qualident(), "<-", parent)
+	}
+	log.Println(parent, o.Qualident())
+	if o.ChildrenCount() > 0 {
+		log.Println(":")
+		for _x := range o.Children() {
+			switch x := _x.(type) {
+			case otm.Object:
+				prettyPrintObject(x)
+			case otm.Link:
+				log.Println("@", x.Object().Qualident())
+			case string, float64, int64, rune:
+				log.Print(_x)
+			default:
+				halt.As(100, reflect.TypeOf(x))
+			}
+		}
+		log.Println(";")
+	}
 }
