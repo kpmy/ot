@@ -61,8 +61,10 @@ func TestParser(t *testing.T) {
 		;
 	;`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
-	if t, err := p.Template(); err == nil {
-		prettyPrint(t)
+	if tpl, err := p.Template(); err == nil {
+		prettyPrint(tpl)
+	} else {
+		t.Fatal(err)
 	}
 }
 
@@ -77,11 +79,34 @@ func TestModel(t *testing.T) {
 			attr.uniq0 :: u4 u5 0U 1U 2U;
 			uniq2(blab) :: x 0;
 			uniq2(blab) :: y 0;
-			u;
+			u
+		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
-	if t, err := p.Template(); err == nil {
-		m := conv.Map(t)
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
 		prettyPrintObject(m)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestModules(t *testing.T) {
+	const testTemplate = `
+		core.template:
+			import :: блаб;
+			import :: хуй;
+		;
+	`
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
+		if err := conv.Resolve(m); err == nil {
+
+		} else {
+			t.Fatal(err)
+		}
+	} else {
+		t.Fatal(err)
 	}
 }

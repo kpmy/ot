@@ -15,10 +15,18 @@ func (q Qualident) String() string {
 	return fmt.Sprint("", fn.MaybeString(q.Template, "."), "", fn.MaybeString(q.Class), "", fn.MaybeString("(", q.Identifier, ")"))
 }
 
-type Object interface {
-	Parent() Object
+type Class interface {
 	Qualident() Qualident
+}
+
+type Object interface {
+	Qualident() Qualident
+	InstanceOf(...Class) Class
+
+	Parent() Object
+
 	Children() chan interface{}
+	ChildrenObjects() chan Object
 	ChildrenCount() uint
 }
 

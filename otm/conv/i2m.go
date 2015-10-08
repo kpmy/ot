@@ -13,11 +13,21 @@ import (
 	"strconv"
 )
 
+type class struct {
+	tpl, cls string
+}
+
+func (c *class) Qualident() otm.Qualident {
+	return otm.Qualident{Template: c.tpl, Class: c.cls}
+}
+
 type object struct {
 	tpl, cls, id string
 	om           map[uint32]*object
+	em           map[uint32]*object
 	vl           []interface{}
 	up           *object
+	clazz        otm.Class
 }
 
 type link struct {
@@ -58,6 +68,8 @@ func (s *stack) top() (ret *object) {
 
 func (o *object) init() {
 	o.om = make(map[uint32]*object)
+	o.em = make(map[uint32]*object)
+	o.clazz = &class{tpl: o.tpl, cls: o.cls}
 }
 
 func (o *object) omQualident() uint32 {
@@ -66,11 +78,32 @@ func (o *object) omQualident() uint32 {
 
 func (o *object) Parent() otm.Object { return o.up }
 
+func (o *object) InstanceOf(override ...otm.Class) otm.Class {
+	if len(override) > 0 {
+		o.clazz = override[0]
+	}
+	return o.clazz
+}
+
 func (o *object) Children() (c chan interface{}) {
 	c = make(chan interface{})
 	go func() {
 		for _, v := range o.vl {
 			c <- v
+		}
+		close(c)
+	}()
+	return
+}
+
+func (o *object) ChildrenObjects() (c chan otm.Object) {
+	c = make(chan otm.Object)
+	go func() {
+		for _, _v := range o.vl {
+			switch v := _v.(type) {
+			case otm.Object:
+				c <- v
+			}
 		}
 		close(c)
 	}()
@@ -93,13 +126,13 @@ func Map(t *ir.Template) (ret otm.Object) {
 	st := newStack()
 	uids := make(map[string]*object)
 	var (
-		emit  func()
+		emit  func() *object
 		reuse func()
 	)
 	for _, _s := range t.Stmt {
 		switch s := _s.(type) {
 		case *ir.Emit:
-			emit = func() {
+			emit = func() *object {
 				var o *object
 				if _, ok := uids[s.Ident]; s.Ident != "" && ok {
 					halt.As(100, "non-unique identifier ", s.Ident)
@@ -113,6 +146,9 @@ func Map(t *ir.Template) (ret otm.Object) {
 					if _, ok := parent.om[omQualident(s)]; !ok {
 						parent.om[o.omQualident()] = o //remember first
 					}
+					if _, ok := parent.em[omQualident(s)]; ok {
+						halt.As(100, "need reuse `", o.Qualident(), "`")
+					}
 					parent.vl = append(parent.vl, o)
 					o.up = parent
 				} else {
@@ -123,13 +159,15 @@ func Map(t *ir.Template) (ret otm.Object) {
 				}
 				emit = nil
 				reuse = nil
+				return o
 			}
 			reuse = func() {
 				if parent := st.top(); parent != nil {
 					if old, ok := parent.om[omQualident(s)]; ok {
 						st.push(old)
 					} else {
-						emit()
+						old = emit()
+						parent.em[omQualident(s)] = old
 					}
 				} else {
 					halt.As(100, "nothing to reuse")
@@ -182,6 +220,14 @@ func Map(t *ir.Template) (ret otm.Object) {
 			}
 		default:
 			halt.As(100, reflect.TypeOf(s))
+		}
+	}
+	var clean func(o *object)
+	clean = func(o *object) {
+		o.em = nil
+		o.om = nil
+		for x := range o.ChildrenObjects() {
+			clean(x.(*object))
 		}
 	}
 	return
