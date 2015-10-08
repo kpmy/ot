@@ -17,7 +17,7 @@ becomes this
 note:
   to: "Tove";
   from: "Jani";
-  heading: Reminder;
+  heading: 'Reminder';
   body: `Don't forget me this weekend!`;
 ;
 ````
