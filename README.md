@@ -5,7 +5,7 @@ Object template language
 
 o.t. is when this
 ````xml
-<note>
+<note status="saved">
   <to>Tove</to>
   <from>Jani</from>
   <heading>Reminder</heading>
@@ -15,6 +15,7 @@ o.t. is when this
 becomes this
 ````
 note:
+  status :: saved;
   to: "Tove";
   from: "Jani";
   heading: 'Reminder';
