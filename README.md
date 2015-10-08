@@ -1,7 +1,7 @@
 # ot
 [![Build Status](https://drone.io/github.com/kpmy/ot/status.png)](https://drone.io/github.com/kpmy/ot/latest)
 
-Object template language
+Object description/template language
 
 o.t. is when this
 ````xml
