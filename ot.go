@@ -2,6 +2,7 @@ package ot
 
 import (
 	"bytes"
+	"encoding/xml"
 	"fmt"
 	"github.com/kpmy/ot/ir"
 	"github.com/kpmy/ot/ir/types"
@@ -86,4 +87,43 @@ func prettyPrintObject(o otm.Object) {
 		}
 		log.Println(";")
 	}
+}
+
+func renderHtml(o otm.Object) {
+	buf := bytes.NewBufferString("<!DOCTYPE HTML>")
+	e := xml.NewEncoder(buf)
+	var obj func(otm.Object)
+	obj = func(o otm.Object) {
+		clazz := o.InstanceOf().Qualident()
+		if clazz.Template == "html" {
+			start := xml.StartElement{}
+			start.Name.Local = clazz.Class
+			if id := o.Qualident().Identifier; id != "" {
+				attr := xml.Attr{}
+				attr.Name.Local = "id"
+				attr.Value = id
+				start.Attr = append(start.Attr, attr)
+			}
+			e.EncodeToken(start)
+			for _x := range o.Children() {
+				switch x := _x.(type) {
+				case otm.Object:
+					obj(x)
+				case string:
+					e.EncodeToken(xml.CharData([]byte(x)))
+				default:
+					halt.As(100, reflect.TypeOf(x))
+				}
+			}
+			e.EncodeToken(start.End())
+		}
+	}
+
+	for x := range o.ChildrenObjects() {
+		if x.InstanceOf().Qualident().Template == "html" && x.InstanceOf().Qualident().Class == "html" {
+			obj(x)
+		}
+	}
+	e.Flush()
+	log.Println(buf.String())
 }

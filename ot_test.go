@@ -92,18 +92,33 @@ func TestModel(t *testing.T) {
 }
 
 func TestModules(t *testing.T) {
+	/*
+		<!DOCTYPE HTML>
+		<html>
+			<body>
+				<p id="hello-teddy">превед, медвед</p>
+				<br/><br/><br/>
+				<p id="good-by-teddy">пока, медвед</p>
+			</body>
+		</html>
+	*/
 	const testTemplate = `
 		core.template:
 			import :: html;
-			br br br
-			br: test;
+			html:
+				body:
+					p(hello-teddy): "превед, медвед";
+					br br br
+					p(good-by-teddy): "пока, медвед";
+				;
+			;
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
 		if err := conv.Resolve(m); err == nil {
-
+			renderHtml(m)
 		} else {
 			t.Fatal(err)
 		}

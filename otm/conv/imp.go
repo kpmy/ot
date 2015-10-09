@@ -116,6 +116,7 @@ func initHtml() {
 	Html.Classes["html"] = &ForeignClass{Template: Html, Class: "html"}
 	Html.Classes["body"] = &ForeignClass{Template: Html, Class: "body"}
 	Html.Classes["p"] = &ForeignClass{Template: Html, Class: "p"}
+	Html.Classes["br"] = &ForeignClass{Template: Html, Class: "br"}
 }
 
 func init() {

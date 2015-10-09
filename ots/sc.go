@@ -147,7 +147,7 @@ func (s *sc) line() {
 func (s *sc) ident() (sym Symbol) {
 	assert.For(unicode.IsLetter(s.ch), 20, "letter must be first")
 	buf := make([]rune, 0)
-	for s.err == nil && (unicode.IsLetter(s.ch) || unicode.IsDigit(s.ch)) {
+	for s.err == nil && (unicode.IsLetter(s.ch) || unicode.IsDigit(s.ch) || strings.ContainsRune(`-_`, s.ch)) {
 		buf = append(buf, s.ch)
 		s.next()
 	}
