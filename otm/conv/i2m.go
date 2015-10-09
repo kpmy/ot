@@ -122,6 +122,9 @@ func omQualident(s *ir.Emit) uint32 {
 	return adler32.Checksum([]byte(fmt.Sprint(s.Template, ".", s.Class, "(", s.Ident, ")")))
 }
 
+func omQualidentString(s *ir.Emit) string {
+	return fmt.Sprint(otm.Qualident{Template: s.Template, Class: s.Class, Identifier: s.Ident})
+}
 func Map(t *ir.Template) (ret otm.Object) {
 	st := newStack()
 	uids := make(map[string]*object)
@@ -163,11 +166,13 @@ func Map(t *ir.Template) (ret otm.Object) {
 			}
 			reuse = func() {
 				if parent := st.top(); parent != nil {
-					if old, ok := parent.om[omQualident(s)]; ok {
+					if old, ok := parent.em[omQualident(s)]; ok {
 						st.push(old)
-					} else {
+					} else if _, ok := parent.om[omQualident(s)]; !ok {
 						old = emit()
 						parent.em[omQualident(s)] = old
+					} else {
+						halt.As(100, "cannot reuse ", omQualidentString(s))
 					}
 				} else {
 					halt.As(100, "nothing to reuse")

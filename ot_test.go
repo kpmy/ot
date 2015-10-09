@@ -97,6 +97,7 @@ func TestModules(t *testing.T) {
 			import :: блаб;
 			import :: хуй;
 			br br br
+			br: test;
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))

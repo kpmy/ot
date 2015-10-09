@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-type BuiltInTemplate struct {
+type ForeignTemplate struct {
 	TemplateName string
 	Classes      map[string]*BuiltInClass
 }
@@ -21,10 +21,10 @@ func (c *BuiltInClass) Qualident() otm.Qualident {
 	return otm.Qualident{Template: c.tpl, Class: c.cls}
 }
 
-var Core *BuiltInTemplate
+var Core *ForeignTemplate
 
 func initCore() {
-	Core = &BuiltInTemplate{TemplateName: "core"}
+	Core = &ForeignTemplate{TemplateName: "core"}
 	Core.Classes = make(map[string]*BuiltInClass)
 	Core.Classes["template"] = &BuiltInClass{tpl: Core.TemplateName, cls: "template"}
 	Core.Classes["import"] = &BuiltInClass{tpl: Core.TemplateName, cls: "import"}
@@ -37,8 +37,8 @@ func init() {
 func Resolve(o otm.Object) (err error) {
 	assert.For(!fn.IsNil(o), 20)
 
-	var upd func(t *BuiltInTemplate, o otm.Object)
-	upd = func(t *BuiltInTemplate, o otm.Object) {
+	var upd func(t *ForeignTemplate, o otm.Object)
+	upd = func(t *ForeignTemplate, o otm.Object) {
 		if clazz, ok := Core.Classes[o.Qualident().Class]; ok && (o.Qualident().Template == t.TemplateName || o.Qualident().Template == "") {
 			o.InstanceOf(clazz)
 			log.Println("class updated for", o.Qualident(), " set ", clazz.Qualident())
