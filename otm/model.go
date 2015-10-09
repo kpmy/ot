@@ -33,3 +33,11 @@ type Object interface {
 type Link interface {
 	Object() Object
 }
+
+func RootOf(o Object) Object {
+	if fn.IsNil(o.Parent()) {
+		return o
+	} else {
+		return RootOf(o.Parent())
+	}
+}

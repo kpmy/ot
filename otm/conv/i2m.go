@@ -80,6 +80,8 @@ func (o *object) Parent() otm.Object { return o.up }
 
 func (o *object) InstanceOf(override ...otm.Class) otm.Class {
 	if len(override) > 0 {
+		_, ok := o.clazz.(*class)
+		assert.For(ok, 40, "already instantiated")
 		o.clazz = override[0]
 	}
 	return o.clazz

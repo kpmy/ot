@@ -94,8 +94,7 @@ func TestModel(t *testing.T) {
 func TestModules(t *testing.T) {
 	const testTemplate = `
 		core.template:
-			import :: блаб;
-			import :: хуй;
+			import :: html;
 			br br br
 			br: test;
 		;
