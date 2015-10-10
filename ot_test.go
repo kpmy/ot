@@ -3,6 +3,7 @@ package ot
 import (
 	"bufio"
 	"bytes"
+	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ot/otm/conv"
 	"github.com/kpmy/ot/otp"
 	"github.com/kpmy/ot/ots"
@@ -71,7 +72,7 @@ func TestParser(t *testing.T) {
 func TestModel(t *testing.T) {
 	const testTemplate = `
 		root:
-			node0: a b c d: d0 d1 d2;;
+			node0: a b c d: d0 d1 d2; @x;
 			node1: x(x) y z;
 			node2: @x "a" "b" "c" "012345";
 			attr.uniq0 :: u0 u1 1 2 3;
@@ -86,6 +87,7 @@ func TestModel(t *testing.T) {
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
 		prettyPrintObject(m)
+		prettyPrintObject(m.CopyOf(otm.DEEP))
 	} else {
 		t.Fatal(err)
 	}
@@ -125,4 +127,17 @@ func TestModules(t *testing.T) {
 	} else {
 		t.Fatal(err)
 	}
+}
+
+func TestBuilder(t *testing.T) {
+	root := otm.Qualident{Class: "root"}
+	br := otm.Qualident{Class: "br"}
+	br0 := otm.Qualident{Class: "br", Identifier: "null"}
+	b := conv.Begin(root).Value("hello", 1945, 3.14, 2.71, "world", '!')
+	b.Child(conv.Begin(br).Prod()).Child(conv.Begin(br).Child(conv.Begin(br).Prod()).Prod()).Child(conv.Begin(br0).Prod())
+	b.Value(conv.Link("null"))
+	o := b.End()
+	prettyPrintObject(o)
+	prettyPrintObject(o.CopyOf(otm.SHALLOW))
+	prettyPrintObject(o.CopyOf(otm.DEEP))
 }

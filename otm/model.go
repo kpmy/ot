@@ -2,7 +2,15 @@ package otm
 
 import (
 	"fmt"
+	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/fn"
+)
+
+type CopyMode bool
+
+const (
+	DEEP    CopyMode = true
+	SHALLOW CopyMode = false
 )
 
 type Qualident struct {
@@ -28,6 +36,8 @@ type Object interface {
 	Children() chan interface{}
 	ChildrenObjects() chan Object
 	ChildrenCount() uint
+	FindById(string) Object
+	CopyOf(deep CopyMode) Object
 }
 
 type Link interface {
@@ -35,9 +45,21 @@ type Link interface {
 }
 
 func RootOf(o Object) Object {
+	assert.For(!fn.IsNil(o), 20)
 	if fn.IsNil(o.Parent()) {
 		return o
 	} else {
 		return RootOf(o.Parent())
 	}
+}
+
+type Modifier func(Object) Object
+type Producer func(...Modifier) Object
+
+type Builder interface {
+	End(...Modifier) Object
+	Prod() Producer
+
+	Value(...interface{}) Builder
+	Child(Producer, ...Modifier) Builder
 }

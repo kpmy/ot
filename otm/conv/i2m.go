@@ -7,6 +7,7 @@ import (
 	"github.com/kpmy/ot/ir/types"
 	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ypk/assert"
+	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"hash/adler32"
 	"reflect"
@@ -36,6 +37,21 @@ type link struct {
 
 func (l *link) Object() otm.Object {
 	return l.to
+}
+
+type futureLink struct {
+	to string
+	o  *object
+	up *object
+}
+
+func (l *futureLink) Object() otm.Object {
+	if l.o == nil {
+		assert.For(!fn.IsNil(l.up), 20)
+		l.o = otm.RootOf(l.up).FindById(l.to).(*object)
+		assert.For(l.o != nil, 60, "object not found ", l.to)
+	}
+	return l.o
 }
 
 type stack struct {
@@ -87,11 +103,45 @@ func (o *object) InstanceOf(override ...otm.Class) otm.Class {
 	return o.clazz
 }
 
+func copyOf(o otm.Object) otm.Producer {
+	return func(...otm.Modifier) otm.Object {
+		return o.CopyOf(otm.DEEP)
+	}
+}
+func (o *object) CopyOf(deep otm.CopyMode) (ret otm.Object) {
+	b := Begin(o.Qualident())
+	for _x := range o.Children() {
+		switch x := _x.(type) {
+		case otm.Object:
+			if deep == otm.DEEP {
+				b.Child(copyOf(x))
+			}
+		case string, int64, float64, rune:
+			b.Value(_x)
+		case *futureLink:
+			if deep == otm.DEEP {
+				b.Value(x)
+			}
+		case *link:
+			if deep == otm.DEEP {
+				b.Value(&futureLink{to: x.Object().Qualident().Identifier})
+			}
+		default:
+			halt.As(100, reflect.TypeOf(x))
+		}
+	}
+	return b.End()
+}
+
 func (o *object) Children() (c chan interface{}) {
 	c = make(chan interface{})
 	go func() {
-		for _, v := range o.vl {
-			c <- v
+		for _, _v := range o.vl {
+			switch v := _v.(type) {
+			case *futureLink:
+				v.up = o
+			}
+			c <- _v
 		}
 		close(c)
 	}()
@@ -118,6 +168,25 @@ func (o *object) Qualident() otm.Qualident {
 
 func (o *object) ChildrenCount() uint {
 	return uint(len(o.vl))
+}
+
+func (o *object) FindById(id string) (ret otm.Object) {
+	var this func(o *object) (ret *object)
+	this = func(o *object) (ret *object) {
+		if o.id == id {
+			ret = o
+		}
+		for _, _x := range o.vl {
+			if x, ok := _x.(*object); ok {
+				if z := this(x); z != nil {
+					ret = z
+				}
+			}
+		}
+		return
+	}
+	ret = this(o)
+	return
 }
 
 func omQualident(s *ir.Emit) uint32 {
@@ -204,7 +273,8 @@ func Map(t *ir.Template) (ret otm.Object) {
 					l := &link{to: o}
 					top.vl = append(top.vl, l)
 				} else {
-					halt.As(100, "identifier not found ", s.Value)
+					l := &futureLink{to: s.Value.(string), up: top}
+					top.vl = append(top.vl, l)
 				}
 			case types.STRING:
 				top.vl = append(top.vl, s.Value.(string))
