@@ -24,12 +24,18 @@ const (
 	Rparen
 	Square
 	Link
+
+	True
+	False
+	Null
+	Inf
+	Minus
 )
 
 var kv map[string]SymCode
 
 func init() {
-	kv = map[string]SymCode{}
+	kv = map[string]SymCode{"true": True, "false": False, "null": Null, "inf": Inf}
 }
 
 type Symbol struct {
@@ -70,6 +76,16 @@ func (sym SymCode) String() (s string) {
 		s = "string"
 	case Link:
 		s = "^"
+	case Minus:
+		s = "-"
+	case True:
+		s = "true"
+	case False:
+		s = "false"
+	case Null:
+		s = "null"
+	case Inf:
+		s = "inf"
 	default:
 		s = fmt.Sprint(sym)
 	}
@@ -160,8 +176,12 @@ func (s *sc) ident() (sym Symbol) {
 		s.next()
 	}
 	if s.err == nil {
-		sym.Code = Ident
 		sym.Value = string(buf)
+		if code, ok := kv[sym.Value]; ok {
+			sym.Code = code
+		} else {
+			sym.Code = Ident
+		}
 	} else {
 		s.mark("error while reading ident")
 	}
@@ -283,6 +303,9 @@ func (s *sc) get() (sym Symbol) {
 		s.next()
 	case ';':
 		sym.Code = Semicolon
+		s.next()
+	case '-':
+		sym.Code = Minus
 		s.next()
 	case '"', '\'', '`':
 		sym.StringOpts.Apos = (s.ch == '\'' || s.ch == '`')

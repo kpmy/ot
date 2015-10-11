@@ -27,7 +27,8 @@ func TestScanner(t *testing.T) {
 				prop:;
 
 			0.125
-			0DU
+			-1
+			0DU -1 true false null inf -inf
 			seek: fas blab(bubub) "dfsdf";
 			;
 		;
@@ -52,6 +53,7 @@ func TestParser(t *testing.T) {
 			0DU
 			child1:
 				child3
+				-1 true false null inf -inf
 			;
 		;
 		child2:
@@ -80,7 +82,7 @@ func TestModel(t *testing.T) {
 			attr.uniq0 :: u4 u5 0U 1U 2U;
 			uniq2(blab) :: x 0;
 			uniq2(blab) :: y 0;
-			u
+			u: -1 true false null inf -inf;
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))

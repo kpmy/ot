@@ -6,6 +6,7 @@ import (
 	"github.com/kpmy/ot/ir"
 	"github.com/kpmy/ot/ir/types"
 	"github.com/kpmy/ot/otm"
+	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
@@ -116,7 +117,7 @@ func (o *object) CopyOf(deep otm.CopyMode) (ret otm.Object) {
 			if deep == otm.DEEP {
 				b.Child(copyOf(x))
 			}
-		case string, int64, float64, rune:
+		case string, int64, float64, rune, tri.Trit:
 			b.Value(_x)
 		case *futureLink:
 			if deep == otm.DEEP {
@@ -292,6 +293,8 @@ func Map(t *ir.Template) (ret otm.Object) {
 				}
 			case types.CHAR:
 				top.vl = append(top.vl, s.Value.(rune))
+			case types.TRILEAN:
+				top.vl = append(top.vl, tri.This(s.Value))
 			default:
 				halt.As(100, s.Type)
 			}

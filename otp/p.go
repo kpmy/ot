@@ -65,8 +65,31 @@ func (p *pr) block() {
 				st.Type, st.Value = p.number()
 				p.emit(st)
 				p.next()
+			case ots.Inf:
+				st := &ir.Put{}
+				st.Type = types.REAL
+				st.Value = "inf"
+				p.emit(st)
+				p.next()
+			case ots.Minus:
+				p.next()
+				st := &ir.Put{}
+				if p.await(ots.Number) {
+					st.Type, st.Value = p.number()
+					st.Value = "-" + st.Value.(string)
+				} else if p.is(ots.Inf) {
+					st.Type = types.REAL
+					st.Value = "-inf"
+				} else {
+					p.mark("number expected")
+				}
+				p.emit(st)
+				p.next()
 			case ots.String:
 				p.emit(&ir.Put{Type: types.STRING, Value: p.sym.Value})
+				p.next()
+			case ots.True, ots.False, ots.Null:
+				p.emit(&ir.Put{Type: types.TRILEAN, Value: p.sym.Value})
 				p.next()
 			case ots.Link:
 				p.next()
@@ -112,7 +135,7 @@ func (p *pr) Template() (ret *ir.Template, err error) {
 			}
 		}()
 	}
-	err = errors.New("compiler error")
+	err = errors.New("parser error")
 	p.block()
 	ret = p.tpl
 	err = nil
@@ -122,7 +145,7 @@ func (p *pr) Template() (ret *ir.Template, err error) {
 func ConnectTo(sc ots.Scanner) Parser {
 	ret := &pr{}
 	ret.sc = sc
-	ret.debug = false
+	ret.debug = true
 	ret.next()
 	ret.init()
 	return ret

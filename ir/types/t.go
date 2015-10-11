@@ -12,6 +12,7 @@ const (
 	REAL
 	INTEGER
 	CHAR
+	TRILEAN
 
 	LINK
 )
@@ -28,7 +29,8 @@ func (t Type) String() string {
 		return "INTEGER"
 	case CHAR:
 		return "CHAR"
-
+	case TRILEAN:
+		return "TRILEAN"
 	case LINK:
 		return "LINK"
 	default:

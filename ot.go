@@ -7,6 +7,7 @@ import (
 	"github.com/kpmy/ot/ir"
 	"github.com/kpmy/ot/ir/types"
 	"github.com/kpmy/ot/otm"
+	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"log"
@@ -48,7 +49,7 @@ func prettyPrint(t *ir.Template) {
 			switch s.Type {
 			case types.STRING:
 				fmt.Fprint(wr, "`", s.Value, "`")
-			case types.REAL, types.INTEGER:
+			case types.REAL, types.INTEGER, types.TRILEAN:
 				fmt.Fprint(wr, s.Value)
 			case types.CHAR:
 				fmt.Fprint(wr, "0", strings.ToUpper(strconv.FormatUint(uint64(s.Value.(rune)), 16)), "U")
@@ -79,7 +80,7 @@ func prettyPrintObject(o otm.Object) {
 				prettyPrintObject(x)
 			case otm.Link:
 				log.Println("^", x.Object().Qualident())
-			case string, float64, int64, rune:
+			case string, float64, int64, rune, tri.Trit:
 				log.Print(_x)
 			default:
 				halt.As(100, reflect.TypeOf(x))

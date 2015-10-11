@@ -2,6 +2,7 @@ package conv
 
 import (
 	"github.com/kpmy/ot/otm"
+	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
@@ -45,7 +46,7 @@ func (b *builder) Value(vl ...interface{}) otm.Builder {
 		switch v := _v.(type) {
 		case int:
 			b.root.vl = append(b.root.vl, int64(v))
-		case string, rune, int64, float64:
+		case string, rune, int64, float64, tri.Trit:
 			b.root.vl = append(b.root.vl, _v)
 		case *futureLink:
 			v.o = nil
