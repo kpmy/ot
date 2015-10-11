@@ -55,10 +55,10 @@ func TestParser(t *testing.T) {
 			;
 		;
 		child2:
-			@par
+			^par
 		;
 		child3:
-			@par
+			^par
 		;
 	;`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
@@ -72,9 +72,9 @@ func TestParser(t *testing.T) {
 func TestModel(t *testing.T) {
 	const testTemplate = `
 		root:
-			node0: a b c d: d0 d1 d2; @x;
+			node0: a b c d: d0 d1 d2; ^x;
 			node1: x(x) y z;
-			node2: @x "a" "b" "c" "012345";
+			node2: ^x "a" "b" "c" "012345";
 			attr.uniq0 :: u0 u1 1 2 3;
 			uniq1 :: u2 u3 0.1 0.2 0.3;
 			attr.uniq0 :: u4 u5 0U 1U 2U;
@@ -153,7 +153,13 @@ func TestContext(t *testing.T) {
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
 		if err := conv.Resolve(m); err == nil {
-
+			data := make(map[string]interface{})
+			data["test"] = "test-string"
+			if err := conv.ResolveContext(m, data); err == nil {
+				prettyPrintObject(m)
+			} else {
+				t.Fatal(err)
+			}
 		} else {
 			t.Fatal(err)
 		}

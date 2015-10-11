@@ -8,6 +8,7 @@ import (
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"log"
+	"reflect"
 )
 
 type ForeignTemplate struct {
@@ -57,10 +58,18 @@ type ImportEntity struct {
 	Ref     otm.Object
 }
 
+type ContextRefEntity struct {
+}
+
 var (
 	Core, Html, Context *ForeignTemplate
 	tm                  map[string]*ForeignTemplate
 )
+
+func (c *ContextRefEntity) find(data map[string]interface{}, id string) (v interface{}, ok bool) {
+	v, ok = data[id]
+	return
+}
 
 func initCore() {
 	Core = &ForeignTemplate{TemplateName: "core"}
@@ -123,7 +132,11 @@ func initContext() {
 	Context = &ForeignTemplate{TemplateName: "context"}
 	tm["context"] = Context
 	Context.Classes = make(map[string]*ForeignClass)
-	Context.Classes["$"] = &ForeignClass{Template: Context, Class: "$"}
+	Context.Classes["$"] = &ForeignClass{Template: Context, Class: "$",
+		Applicator: func(c *ForeignClass, o otm.Object) (_ func(*ForeignClass, otm.Object) error, err error) {
+			c.Entity = &ContextRefEntity{}
+			return nil, nil
+		}}
 }
 
 func init() {
@@ -175,6 +188,52 @@ func Resolve(o otm.Object) (err error) {
 	switch tpl := o.Qualident().Template; tpl {
 	case Core.TemplateName:
 		err = resolve(Core, o)
+	default:
+		err = errors.New("nothing to resolve")
+	}
+	return
+}
+
+func resolveContext(_o *object, data map[string]interface{}) (err error) {
+	for i, _v := range _o.vl {
+		switch v := _v.(type) {
+		case *object:
+			handled := false
+			if clazz, ok := v.clazz.(*ForeignClass); ok {
+				switch e := clazz.Entity.(type) {
+				case *ContextRefEntity:
+					if _val, ok := e.find(data, v.id); ok {
+						switch val := _val.(type) {
+						case int:
+							_o.vl[i] = int64(val)
+						case string, int64, float64, rune:
+							_o.vl[i] = _val
+						default:
+							halt.As(100, reflect.TypeOf(val))
+						}
+						handled = true
+					} else {
+						err = errors.New(fmt.Sprint("context object not found: ", v.id))
+					}
+				}
+			}
+			if !handled && err == nil {
+				err = resolveContext(v, data)
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+	return
+}
+
+func ResolveContext(o otm.Object, data map[string]interface{}) (err error) {
+	assert.For(!fn.IsNil(o), 20)
+
+	switch tpl := o.Qualident().Template; tpl {
+	case Core.TemplateName:
+		err = resolveContext(o.(*object), data)
 	default:
 		err = errors.New("nothing to resolve")
 	}

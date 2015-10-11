@@ -69,7 +69,7 @@ func (sym SymCode) String() (s string) {
 	case String:
 		s = "string"
 	case Link:
-		s = "@"
+		s = "^"
 	default:
 		s = fmt.Sprint(sym)
 	}
@@ -145,11 +145,11 @@ func (s *sc) line() {
 }
 
 func isIdentLetter(r rune) bool {
-	return isIdentFirstLetter(r) || unicode.IsDigit(r)
+	return isIdentFirstLetter(r) || unicode.IsDigit(r) || strings.ContainsRune(`_-/\|@`, r)
 }
 
 func isIdentFirstLetter(r rune) bool {
-	return unicode.IsLetter(r) || strings.ContainsRune(`-_$`, r)
+	return unicode.IsLetter(r) || strings.ContainsRune(`$`, r)
 }
 
 func (s *sc) ident() (sym Symbol) {
@@ -278,7 +278,7 @@ func (s *sc) get() (sym Symbol) {
 		} else {
 			sym.Code = Colon
 		}
-	case '@':
+	case '^':
 		sym.Code = Link
 		s.next()
 	case ';':

@@ -53,7 +53,7 @@ func prettyPrint(t *ir.Template) {
 			case types.CHAR:
 				fmt.Fprint(wr, "0", strings.ToUpper(strconv.FormatUint(uint64(s.Value.(rune)), 16)), "U")
 			case types.LINK:
-				fmt.Fprint(wr, "@", s.Value)
+				fmt.Fprint(wr, "^", s.Value)
 			default:
 				halt.As(100, s.Type)
 			}
@@ -78,7 +78,7 @@ func prettyPrintObject(o otm.Object) {
 			case otm.Object:
 				prettyPrintObject(x)
 			case otm.Link:
-				log.Println("@", x.Object().Qualident())
+				log.Println("^", x.Object().Qualident())
 			case string, float64, int64, rune:
 				log.Print(_x)
 			default:
