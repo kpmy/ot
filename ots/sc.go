@@ -75,7 +75,7 @@ func (sym SymCode) String() (s string) {
 	case String:
 		s = "string"
 	case Link:
-		s = "^"
+		s = "@"
 	case Minus:
 		s = "-"
 	case True:
@@ -298,7 +298,7 @@ func (s *sc) get() (sym Symbol) {
 		} else {
 			sym.Code = Colon
 		}
-	case '^':
+	case '@':
 		sym.Code = Link
 		s.next()
 	case ';':

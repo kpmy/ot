@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kpmy/ot/otm"
+	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"log"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 type ForeignTemplate struct {
@@ -66,8 +69,31 @@ var (
 	tm                  map[string]*ForeignTemplate
 )
 
-func (c *ContextRefEntity) find(data map[string]interface{}, id string) (v interface{}, ok bool) {
-	v, ok = data[id]
+func (c *ContextRefEntity) find(data map[string]interface{}, id string) (v interface{}, err error) {
+	path := strings.Split(id, "/")
+	var x interface{}
+	x = data
+	for _, s := range path {
+		if s != "" {
+			switch v := x.(type) {
+			case map[string]interface{}:
+				x = v[s]
+			case []interface{}:
+				var i int64 = -1
+				if i, err = strconv.ParseInt(s, 10, 64); err == nil {
+					x = v[int(i)]
+				}
+			default:
+				err = errors.New(fmt.Sprint("not indexable ", reflect.TypeOf(v)))
+			}
+		}
+		if err != nil {
+			break
+		}
+	}
+	if err == nil {
+		v = x
+	}
 	return
 }
 
@@ -202,18 +228,18 @@ func resolveContext(_o *object, data map[string]interface{}) (err error) {
 			if clazz, ok := v.clazz.(*ForeignClass); ok {
 				switch e := clazz.Entity.(type) {
 				case *ContextRefEntity:
-					if _val, ok := e.find(data, v.id); ok {
+					if _val, _err := e.find(data, v.id); _err == nil {
 						switch val := _val.(type) {
 						case int:
 							_o.vl[i] = int64(val)
-						case string, int64, float64, rune:
+						case string, int64, float64, rune, tri.Trit:
 							_o.vl[i] = _val
 						default:
 							halt.As(100, reflect.TypeOf(val))
 						}
 						handled = true
 					} else {
-						err = errors.New(fmt.Sprint("context object not found: ", v.id))
+						err = errors.New(fmt.Sprint("context object not found: ", v.id, " ", _err))
 					}
 				}
 			}
