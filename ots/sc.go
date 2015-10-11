@@ -144,10 +144,18 @@ func (s *sc) line() {
 	}
 }
 
+func isIdentLetter(r rune) bool {
+	return isIdentFirstLetter(r) || unicode.IsDigit(r)
+}
+
+func isIdentFirstLetter(r rune) bool {
+	return unicode.IsLetter(r) || strings.ContainsRune(`-_$`, r)
+}
+
 func (s *sc) ident() (sym Symbol) {
-	assert.For(unicode.IsLetter(s.ch), 20, "letter must be first")
+	assert.For(isIdentFirstLetter(s.ch), 20, "letter must be first")
 	buf := make([]rune, 0)
-	for s.err == nil && (unicode.IsLetter(s.ch) || unicode.IsDigit(s.ch) || strings.ContainsRune(`-_`, s.ch)) {
+	for s.err == nil && isIdentLetter(s.ch) {
 		buf = append(buf, s.ch)
 		s.next()
 	}
@@ -282,7 +290,7 @@ func (s *sc) get() (sym Symbol) {
 		sym.Code = String
 	default:
 		switch {
-		case unicode.IsLetter(s.ch):
+		case isIdentFirstLetter(s.ch):
 			sym = s.ident()
 		case unicode.IsSpace(s.ch):
 			for unicode.IsSpace(s.ch) {

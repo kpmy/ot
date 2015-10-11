@@ -57,10 +57,10 @@ type ImportEntity struct {
 	Ref     otm.Object
 }
 
-var Core *ForeignTemplate
-var Html *ForeignTemplate
-
-var tm map[string]*ForeignTemplate
+var (
+	Core, Html, Context *ForeignTemplate
+	tm                  map[string]*ForeignTemplate
+)
 
 func initCore() {
 	Core = &ForeignTemplate{TemplateName: "core"}
@@ -119,10 +119,18 @@ func initHtml() {
 	Html.Classes["br"] = &ForeignClass{Template: Html, Class: "br"}
 }
 
+func initContext() {
+	Context = &ForeignTemplate{TemplateName: "context"}
+	tm["context"] = Context
+	Context.Classes = make(map[string]*ForeignClass)
+	Context.Classes["$"] = &ForeignClass{Template: Context, Class: "$"}
+}
+
 func init() {
 	tm = make(map[string]*ForeignTemplate)
 	initCore()
-	initHtml()
+	initHtml() //TODO выпилить позже или перенести в отдельный модуль
+	initContext()
 }
 func resolve(t *ForeignTemplate, o otm.Object) (err error) {
 	assert.For(!fn.IsNil(o), 20)

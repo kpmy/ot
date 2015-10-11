@@ -141,3 +141,23 @@ func TestBuilder(t *testing.T) {
 	prettyPrintObject(o.CopyOf(otm.SHALLOW))
 	prettyPrintObject(o.CopyOf(otm.DEEP))
 }
+
+func TestContext(t *testing.T) {
+	const testTemplate = `
+		core.template(бла-блабыч):
+			import :: context;
+			$(test)
+		;
+	`
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
+		if err := conv.Resolve(m); err == nil {
+
+		} else {
+			t.Fatal(err)
+		}
+	} else {
+		t.Fatal(err)
+	}
+}
