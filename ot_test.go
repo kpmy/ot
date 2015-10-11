@@ -84,6 +84,7 @@ func TestModel(t *testing.T) {
 			uniq2(blab) :: x 0;
 			uniq2(blab) :: y 0;
 			u: -1 true false null inf -inf;
+			li: kpmy@blab;
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
@@ -151,7 +152,7 @@ func TestContext(t *testing.T) {
 			import :: context;
 			$(test) $(test-tri)
 			$(test-path/test)
-			$(test-list/0)
+			$(test-list/0) $(test-list/1) "so template" $(test-list/2)
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
