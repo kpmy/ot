@@ -160,13 +160,13 @@ func (s *sc) line() {
 	}
 }
 
-// $asdf.as-df@a_s_d_f/asdf#asd|asd|asd?!,\\=+*&^
+// @#$%^&*-_=+,.?!/|\\
 func isIdentLetter(r rune) bool {
-	return isIdentFirstLetter(r) || unicode.IsDigit(r) || strings.ContainsRune(`._-/\|@?!,=+%#*&^`, r)
+	return isIdentFirstLetter(r) || unicode.IsDigit(r) || strings.ContainsRune(`@#$%^&*-_=+,.?!/|\\`, r)
 }
 
 func isIdentFirstLetter(r rune) bool {
-	return unicode.IsLetter(r) || strings.ContainsRune(`$&^%#`, r)
+	return unicode.IsLetter(r) || strings.ContainsRune(`$`, r)
 }
 
 func (s *sc) ident() (sym Symbol) {
