@@ -20,7 +20,7 @@ type Qualident struct {
 }
 
 func (q Qualident) String() string {
-	return fmt.Sprint("", fn.MaybeString(q.Template, "."), "", fn.MaybeString(q.Class), "", fn.MaybeString("(", q.Identifier, ")"))
+	return fmt.Sprint("", fn.MaybeString(q.Template, "~"), "", fn.MaybeString(q.Class), "", fn.MaybeString("(", q.Identifier, ")"))
 }
 
 type Class interface {

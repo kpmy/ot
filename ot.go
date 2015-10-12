@@ -29,7 +29,7 @@ func prettyPrint(t *ir.Template) {
 		switch s := _s.(type) {
 		case *ir.Emit:
 			tab()
-			fmt.Fprint(wr, fn.MaybeString(s.Template, "."), s.Class, fn.MaybeString("(", s.Ident, ")"))
+			fmt.Fprint(wr, fn.MaybeString(s.Template, "~"), s.Class, fn.MaybeString("(", s.Ident, ")"))
 			if s.ChildCount == 0 {
 				fmt.Fprintln(wr)
 			}

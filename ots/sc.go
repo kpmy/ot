@@ -17,7 +17,7 @@ const (
 	String
 
 	Delimiter
-	Period
+	Qualifier
 	Colon
 	Semicolon
 	Lparen
@@ -58,8 +58,8 @@ func (sym SymCode) String() (s string) {
 		s = "space"
 	case Ident:
 		s = "ident"
-	case Period:
-		s = "."
+	case Qualifier:
+		s = "~"
 	case Colon:
 		s = ":"
 	case Square:
@@ -161,7 +161,7 @@ func (s *sc) line() {
 }
 
 func isIdentLetter(r rune) bool {
-	return isIdentFirstLetter(r) || unicode.IsDigit(r) || strings.ContainsRune(`_-/\|@`, r)
+	return isIdentFirstLetter(r) || unicode.IsDigit(r) || strings.ContainsRune(`._-/\|@`, r)
 }
 
 func isIdentFirstLetter(r rune) bool {
@@ -279,8 +279,8 @@ func (s *sc) str() string {
 
 func (s *sc) get() (sym Symbol) {
 	switch s.ch {
-	case '.':
-		sym.Code = Period
+	case '~':
+		sym.Code = Qualifier
 		s.next()
 	case '(':
 		if s.next() == '*' {

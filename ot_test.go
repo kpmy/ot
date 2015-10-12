@@ -18,9 +18,9 @@ func init() {
 
 func TestScanner(t *testing.T) {
 	const scannerTestTemplate = `(* test template no semantic rules applied *)
-		CORE.TEMPLATE:
+		CORE~TEMPLATE:
 			import :: context html;
-			html.body:
+			html~body:
 			br: tere; 123 "fas
 
 
@@ -44,7 +44,7 @@ func TestScanner(t *testing.T) {
 func TestParser(t *testing.T) {
 	const testTemplate = `
 	block:
-		blob.child0(par):
+		blob~child0(par):
 			unique ::
 				блаб
 			;
@@ -78,13 +78,13 @@ func TestModel(t *testing.T) {
 			node0: a b c d: d0 d1 d2; @x;
 			node1: x(x) y z;
 			node2: @x "a" "b" "c" "012345";
-			attr.uniq0 :: u0 u1 1 2 3;
+			attr~uniq0 :: u0 u1 1 2 3;
 			uniq1 :: u2 u3 0.1 0.2 0.3;
-			attr.uniq0 :: u4 u5 0U 1U 2U;
+			attr~uniq0 :: u4 u5 0U 1U 2U;
 			uniq2(blab) :: x 0;
 			uniq2(blab) :: y 0;
 			u: -1 true false null inf -inf;
-			li: kpmy@blab;
+			li: kpmy@blab.ru;
 		;
 	`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
@@ -109,7 +109,7 @@ func TestModules(t *testing.T) {
 		</html>
 	*/
 	const testTemplate = `
-		core.template:
+		core~template:
 			import :: html;
 			html:
 				body:
@@ -148,7 +148,7 @@ func TestBuilder(t *testing.T) {
 
 func TestContext(t *testing.T) {
 	const testTemplate = `
-		core.template(бла-блабыч):
+		core~template(бла-блабыч):
 			import :: context;
 			$(test) $(test-tri)
 			$(test-path/test)

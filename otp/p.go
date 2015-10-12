@@ -28,8 +28,8 @@ func (p *pr) qualident() (string, string) {
 	id := ""
 	tid := p.ident()
 	p.next()
-	if p.is(ots.Period) {
-		p.expect(ots.Ident, "identifier expected", ots.Period)
+	if p.is(ots.Qualifier) {
+		p.expect(ots.Ident, "identifier expected", ots.Qualifier)
 		id = p.ident()
 		p.next()
 	} else {
