@@ -219,8 +219,6 @@ const dec = "0123456789"
 const hhex = "ABCDEF"
 const hex = dec + hhex
 
-//const non = "01234WXYZ"
-//const tri = "-0+"
 const modifier = "U"
 
 //first char always 0..9
