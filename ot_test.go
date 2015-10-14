@@ -8,6 +8,7 @@ import (
 	"github.com/kpmy/ot/otp"
 	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/trigo"
+	"github.com/kpmy/ypk/assert"
 	"log"
 	"testing"
 )
@@ -147,25 +148,40 @@ func TestBuilder(t *testing.T) {
 }
 
 func TestContext(t *testing.T) {
+	const extTemplate = `
+		core~template:
+			import: context;
+			block(id):
+				$: test-list/1; $: test-list/1; $: test-list/1;
+			;
+		;
+	`
 	const testTemplate = `
 		core~template(бла-блабыч):
 			import :: context;
-			$(test) $(test-tri)
-			$(test-path/test)
-			$(test-list/0) $(test-list/1) "so template" $(test-list/2)
+			$: test; $: test-tri;
+			$: test-path/test;
+			$: test-list/0; $: test-list/1; "so template" $: test-list/2;
+			test:
+				$include: my~external(id);
+			;
 		;
 	`
-	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
-	if tpl, err := p.Template(); err == nil {
-		m := conv.Map(tpl)
-		if err := conv.Resolve(m); err == nil {
-			data := make(map[string]interface{})
-			data["test"] = "test-string"
-			data["test-tri"] = tri.TRUE
-			data["test-path"] = data
-			data["test-list"] = []interface{}{"one", "two", "three"}
-			if err := conv.ResolveContext(m, data); err == nil {
-				prettyPrintObject(m)
+	data := make(map[string]interface{})
+	data["test"] = "test-string"
+	data["test-tri"] = tri.TRUE
+	data["test-path"] = data
+	data["test-list"] = []interface{}{"one", "two", "three"}
+
+	var eo otm.Object
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(extTemplate))))
+	if ext, err := p.Template(); err == nil {
+		o := conv.Map(ext)
+		if err := conv.Resolve(o); err == nil {
+			if err := conv.ResolveContext(o, nil, data); err == nil {
+				eo = o.FindById("id")
+				assert.For(eo != nil, 20)
+				log.Println("external resolved")
 			} else {
 				t.Fatal(err)
 			}
@@ -174,5 +190,26 @@ func TestContext(t *testing.T) {
 		}
 	} else {
 		t.Fatal(err)
+	}
+	resolver := func(o otm.Qualident) (otm.Object, error) {
+		assert.For(o.Identifier == "id", 20)
+		return eo, nil
+	}
+	{
+		p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+		if tpl, err := p.Template(); err == nil {
+			m := conv.Map(tpl)
+			if err := conv.Resolve(m); err == nil {
+				if err := conv.ResolveContext(m, resolver, data); err == nil {
+					prettyPrintObject(m)
+				} else {
+					t.Fatal(err)
+				}
+			} else {
+				t.Fatal(err)
+			}
+		} else {
+			t.Fatal(err)
+		}
 	}
 }

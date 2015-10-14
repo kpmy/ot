@@ -64,35 +64,50 @@ type ImportEntity struct {
 type ContextRefEntity struct {
 }
 
+type ContextIncludeEntity struct {
+}
+
 var (
 	Core, Html, Context *ForeignTemplate
 	tm                  map[string]*ForeignTemplate
 )
 
-func (c *ContextRefEntity) find(data map[string]interface{}, id string) (v interface{}, err error) {
-	path := strings.Split(id, "/")
-	var x interface{}
-	x = data
-	for _, s := range path {
-		if s != "" {
-			switch v := x.(type) {
-			case map[string]interface{}:
-				x = v[s]
-			case []interface{}:
-				var i int64 = -1
-				if i, err = strconv.ParseInt(s, 10, 64); err == nil {
-					x = v[int(i)]
+func (c *ContextRefEntity) find(data map[string]interface{}, root *object) (v interface{}, err error) {
+	if root.ChildrenCount() == 1 {
+		var id = ""
+		for o := range root.ChildrenObjects() {
+			id = o.Qualident().Class
+		}
+		if id != "" {
+			path := strings.Split(id, "/")
+			var x interface{}
+			x = data
+			for _, s := range path {
+				if s != "" {
+					switch v := x.(type) {
+					case map[string]interface{}:
+						x = v[s]
+					case []interface{}:
+						var i int64 = -1
+						if i, err = strconv.ParseInt(s, 10, 64); err == nil {
+							x = v[int(i)]
+						}
+					default:
+						err = errors.New(fmt.Sprint("not indexable ", reflect.TypeOf(v)))
+					}
 				}
-			default:
-				err = errors.New(fmt.Sprint("not indexable ", reflect.TypeOf(v)))
+				if err != nil {
+					break
+				}
 			}
+			if err == nil {
+				v = x
+			}
+		} else {
+			err = errors.New("context reference empty")
 		}
-		if err != nil {
-			break
-		}
-	}
-	if err == nil {
-		v = x
+	} else {
+		err = errors.New(fmt.Sprint("context reference wrong format ", root.Qualident()))
 	}
 	return
 }
@@ -163,6 +178,11 @@ func initContext() {
 			c.Entity = &ContextRefEntity{}
 			return nil, nil
 		}}
+	Context.Classes["$include"] = &ForeignClass{Template: Context, Class: "$include",
+		Applicator: func(c *ForeignClass, o otm.Object) (_ func(*ForeignClass, otm.Object) error, err error) {
+			c.Entity = &ContextIncludeEntity{}
+			return nil, nil
+		}}
 }
 
 func init() {
@@ -220,7 +240,9 @@ func Resolve(o otm.Object) (err error) {
 	return
 }
 
-func resolveContext(_o *object, data map[string]interface{}) (err error) {
+type ResolverFunc func(otm.Qualident) (otm.Object, error)
+
+func resolveContext(_o *object, resolver ResolverFunc, data map[string]interface{}) (err error) {
 	for i, _v := range _o.vl {
 		switch v := _v.(type) {
 		case *object:
@@ -228,7 +250,7 @@ func resolveContext(_o *object, data map[string]interface{}) (err error) {
 			if clazz, ok := v.clazz.(*ForeignClass); ok {
 				switch e := clazz.Entity.(type) {
 				case *ContextRefEntity:
-					if _val, _err := e.find(data, v.id); _err == nil {
+					if _val, _err := e.find(data, v); _err == nil {
 						switch val := _val.(type) {
 						case int:
 							_o.vl[i] = int64(val)
@@ -241,10 +263,27 @@ func resolveContext(_o *object, data map[string]interface{}) (err error) {
 					} else {
 						err = errors.New(fmt.Sprint("context object not found: ", v.id, " ", _err))
 					}
+				case *ContextIncludeEntity:
+					if v.ChildrenCount() == 1 {
+						var id otm.Qualident
+						for o := range v.ChildrenObjects() {
+							id = o.Qualident()
+						}
+						if incl, _err := resolver(id); _err == nil {
+							_i := incl.CopyOf(otm.DEEP).(*object)
+							_o.vl[i] = _i
+							_i.up = _o
+							handled = true
+						} else {
+							err = _err
+						}
+					} else {
+						err = errors.New("$include empty")
+					}
 				}
 			}
 			if !handled && err == nil {
-				err = resolveContext(v, data)
+				err = resolveContext(v, resolver, data)
 			}
 		}
 		if err != nil {
@@ -254,12 +293,12 @@ func resolveContext(_o *object, data map[string]interface{}) (err error) {
 	return
 }
 
-func ResolveContext(o otm.Object, data map[string]interface{}) (err error) {
+func ResolveContext(o otm.Object, resolver ResolverFunc, data map[string]interface{}) (err error) {
 	assert.For(!fn.IsNil(o), 20)
 
 	switch tpl := o.Qualident().Template; tpl {
 	case Core.TemplateName:
-		err = resolveContext(o.(*object), data)
+		err = resolveContext(o.(*object), resolver, data)
 	default:
 		err = errors.New("nothing to resolve")
 	}
