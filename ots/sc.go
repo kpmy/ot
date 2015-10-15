@@ -176,7 +176,7 @@ func (s *sc) ident() (sym Symbol) {
 		buf = append(buf, s.ch)
 		s.next()
 	}
-	if s.err == nil {
+	if s.err == nil || s.err == io.EOF {
 		sym.Value = string(buf)
 		if code, ok := kv[sym.Value]; ok {
 			sym.Code = code
@@ -184,7 +184,7 @@ func (s *sc) ident() (sym Symbol) {
 			sym.Code = Ident
 		}
 	} else {
-		s.mark("error while reading ident")
+		s.mark("error while reading ident ", s.err)
 	}
 	return
 }

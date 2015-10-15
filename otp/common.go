@@ -23,6 +23,35 @@ func (m *mark) Mark(msg ...interface{}) {
 
 func (m *mark) FutureMark() Marker { halt.As(100); return nil }
 
+type Common interface {
+	Sym() ots.Symbol
+	Next() ots.Symbol
+	Expect(ots.SymCode)
+}
+
+type ext struct {
+	common
+}
+
+func (e *ext) Expect(sym ots.SymCode) {
+	e.expect(sym, "unexpected sym")
+}
+
+func (e *ext) Next() ots.Symbol {
+	return e.next()
+}
+
+func (e *ext) Sym() ots.Symbol {
+	return e.sym
+}
+
+func Commons(sc ots.Scanner) Common {
+	e := &ext{}
+	e.sc = sc
+	e.next()
+	return e
+}
+
 type common struct {
 	sc    ots.Scanner
 	sym   ots.Symbol

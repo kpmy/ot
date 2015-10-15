@@ -3,8 +3,11 @@ package ot
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ot/otm/conv"
+	"github.com/kpmy/ot/otm/path"
+	"github.com/kpmy/ot/otm/path/trav"
 	"github.com/kpmy/ot/otp"
 	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/trigo"
@@ -211,5 +214,31 @@ func TestContext(t *testing.T) {
 		} else {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestPath(t *testing.T) {
+	const testTemplate = `
+		my~root:
+			proc: fs net mem;
+			var: www open close "readme.txt";
+			home: pk: go torrents docu;;
+		;
+	`
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
+		if tr, err := trav.Trav("my~root:var:www"); err == nil {
+			if x, err := tr.Run(m, path.OBJECT); err == nil {
+				fmt.Println(x.(otm.Object))
+			} else {
+				t.Fatal(err)
+			}
+		} else {
+			t.Fatal(err)
+		}
+		prettyPrintObject(m)
+	} else {
+		t.Fatal(err)
 	}
 }
