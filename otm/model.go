@@ -36,7 +36,9 @@ type Object interface {
 	Children() chan interface{}
 	ChildrenObjects() chan Object
 	ChildrenCount() uint
+
 	FindById(string) Object
+	FindByQualident(Qualident) []Object
 	CopyOf(deep CopyMode) Object
 }
 

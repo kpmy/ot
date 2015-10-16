@@ -1,15 +1,20 @@
 package ot
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/xml"
 	"fmt"
 	"github.com/kpmy/ot/ir"
 	"github.com/kpmy/ot/ir/types"
 	"github.com/kpmy/ot/otm"
+	"github.com/kpmy/ot/otm/conv"
+	"github.com/kpmy/ot/otp"
+	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
+	"io"
 	"log"
 	"reflect"
 	"strconv"
@@ -127,4 +132,14 @@ func renderHtml(o otm.Object) {
 	}
 	e.Flush()
 	log.Println(buf.String())
+}
+
+func compile(tpl io.Reader) (otm.Object, error) {
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(tpl)))
+	if tpl, err := p.Template(); err == nil {
+		return conv.Map(tpl), nil
+	} else {
+		return nil, err
+	}
+
 }

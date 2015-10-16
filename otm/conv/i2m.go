@@ -190,6 +190,15 @@ func (o *object) FindById(id string) (ret otm.Object) {
 	return
 }
 
+func (o *object) FindByQualident(q otm.Qualident) (ret []otm.Object) {
+	for x := range o.ChildrenObjects() {
+		if x.Qualident() == q {
+			ret = append(ret, x)
+		}
+	}
+	return
+}
+
 func omQualident(s *ir.Emit) uint32 {
 	return adler32.Checksum([]byte(fmt.Sprint(s.Template, ".", s.Class, "(", s.Ident, ")")))
 }

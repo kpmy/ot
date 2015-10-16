@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
+	"github.com/kpmy/ot/ong/loader"
 	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ot/otm/conv"
 	"github.com/kpmy/ot/otm/path"
@@ -238,6 +239,23 @@ func TestPath(t *testing.T) {
 			t.Fatal(err)
 		}
 		prettyPrintObject(m)
+	} else {
+		t.Fatal(err)
+	}
+}
+
+func TestScheme(t *testing.T) {
+	const schemeTemplate = `
+		ng~grammar:
+			ng~start:
+				ng~element: "root" ng~zeroOrMore: ng~element: "child";;;
+			;
+		;
+	`
+	if o, err := compile(bytes.NewBufferString(schemeTemplate)); err == nil {
+		prettyPrintObject(o)
+		start := loader.Load(o)
+		testSchemaPrint(start)
 	} else {
 		t.Fatal(err)
 	}
