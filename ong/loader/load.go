@@ -91,6 +91,15 @@ func traverseWrap() func(w *Walker, o otm.Object) {
 	}
 }
 
+func NameOf(o otm.Object) (ret string) {
+	if x, ok := o.Child(0); ok {
+		if s, ok := x.(string); ok {
+			ret = s
+		}
+	}
+	return
+}
+
 func (w *Walker) traverse(o otm.Object) {
 	var (
 		this    schema.Guide
@@ -141,8 +150,8 @@ func (w *Walker) traverse(o otm.Object) {
 		important()
 		this = Construct(o.Qualident())
 		{
-			/*std.NameAttr(this, n.Name)
-			std.CharDataAttr(this, n.Data())
+			std.NameAttr(this, NameOf(o))
+			/*std.CharDataAttr(this, n.Data())
 			std.TypeAttr(this, n.Type)
 			std.NSAttr(this, n.NS)
 			std.DataTypeAttr(this, n.DataType)

@@ -36,6 +36,7 @@ type Object interface {
 	Children() chan interface{}
 	ChildrenObjects() chan Object
 	ChildrenCount() uint
+	Child(uint) (interface{}, bool)
 
 	FindById(string) Object
 	FindByQualident(Qualident) []Object

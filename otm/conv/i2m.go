@@ -171,6 +171,13 @@ func (o *object) ChildrenCount() uint {
 	return uint(len(o.vl))
 }
 
+func (o *object) Child(idx uint) (interface{}, bool) {
+	if idx < uint(len(o.vl)) {
+		return o.vl[idx], true
+	} else {
+		return nil, false
+	}
+}
 func (o *object) FindById(id string) (ret otm.Object) {
 	var this func(o *object) (ret *object)
 	this = func(o *object) (ret *object) {
