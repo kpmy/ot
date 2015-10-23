@@ -145,7 +145,7 @@ func (p *pr) Template() (ret *ir.Template, err error) {
 func ConnectTo(sc ots.Scanner) Parser {
 	ret := &pr{}
 	ret.sc = sc
-	ret.debug = true
+	ret.debug = false
 	ret.next()
 	ret.init()
 	return ret
