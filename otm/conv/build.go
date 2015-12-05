@@ -46,7 +46,7 @@ func (b *builder) Value(vl ...interface{}) otm.Builder {
 		switch v := _v.(type) {
 		case int:
 			b.root.vl = append(b.root.vl, int64(v))
-		case string, rune, int64, float64, tri.Trit:
+		case string, rune, int64, float64, tri.Trit, []uint8:
 			b.root.vl = append(b.root.vl, _v)
 		case *futureLink:
 			v.o = nil

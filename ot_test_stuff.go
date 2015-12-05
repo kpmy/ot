@@ -14,6 +14,7 @@ import (
 	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
+	"github.com/tv42/zbase32"
 	"io"
 	"log"
 	"reflect"
@@ -87,6 +88,9 @@ func prettyPrintObject(o otm.Object) {
 				log.Println("@", x.Object().Qualident())
 			case string, float64, int64, rune, tri.Trit:
 				log.Print(_x)
+			case []uint8:
+				s := zbase32.EncodeToString(x)
+				log.Print("zbase32(", s, ")", x)
 			default:
 				halt.As(100, reflect.TypeOf(x))
 			}

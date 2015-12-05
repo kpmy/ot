@@ -8,6 +8,7 @@ import (
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
+	"github.com/tv42/zbase32"
 	"log"
 	"reflect"
 	"strconv"
@@ -68,8 +69,8 @@ type ContextIncludeEntity struct {
 }
 
 var (
-	Core, Html, Context *ForeignTemplate
-	tm                  map[string]*ForeignTemplate
+	Core, Html, Context, Binary *ForeignTemplate
+	tm                          map[string]*ForeignTemplate
 )
 
 func (c *ContextRefEntity) find(data map[string]interface{}, root *object) (v interface{}, err error) {
@@ -185,11 +186,51 @@ func initContext() {
 		}}
 }
 
+type BinaryDecodeEntity struct {
+}
+
+func initBinary() {
+	Binary = &ForeignTemplate{TemplateName: "binary"}
+	tm["zbase32"] = Binary
+	Binary.Classes = make(map[string]*ForeignClass)
+	Binary.Classes["z32"] = &ForeignClass{Template: Binary, Class: "z32",
+		Applicator: func(c *ForeignClass, o otm.Object) (post func(*ForeignClass, otm.Object) error, err error) {
+			c.Entity = &BinaryDecodeEntity{}
+			post = func(c *ForeignClass, _o otm.Object) error {
+				if o, ok := _o.(*object); ok {
+					for i, _c := range o.vl {
+						switch c := _c.(type) {
+						case string:
+							if c != "" {
+								if data, err := zbase32.DecodeString(c); err == nil {
+									o.vl[i] = data
+								} else {
+									return err
+								}
+							}
+						case otm.Object:
+							if c.Qualident().Template == "" || c.Qualident().Template == "zbase32" {
+								if data, err := zbase32.DecodeString(c.Qualident().Class); err == nil {
+									o.vl[i] = data
+								} else {
+									return err
+								}
+							}
+						}
+					}
+				}
+				return nil
+			}
+			return
+		}}
+}
+
 func init() {
 	tm = make(map[string]*ForeignTemplate)
 	initCore()
 	initHtml() //TODO выпилить позже или перенести в отдельный модуль
 	initContext()
+	initBinary()
 }
 func resolve(t *ForeignTemplate, o otm.Object) (err error) {
 	assert.For(!fn.IsNil(o), 20)

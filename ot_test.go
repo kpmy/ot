@@ -260,3 +260,27 @@ func TestScheme(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestBinary(t *testing.T) {
+	const testTemplate = `
+		core~template:
+			import: zbase32;
+			z32: pb1sa5dxfoo8q551pt1yw "pb1sa5dxfoo8q551pt1yw";
+		;`
+
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
+		if err := conv.Resolve(m); err == nil {
+			prettyPrintObject(m)
+		} else {
+			t.Fatal(err)
+		}
+	} else {
+		t.Fatal(err)
+	}
+
+	hw := []uint8("hello, world")
+	b := conv.Begin(otm.Qualident{Class: "z32"}).Value("hello", hw)
+	prettyPrintObject(b.End())
+}
