@@ -3,7 +3,6 @@ package ot
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"github.com/kpmy/ot/ong/loader"
 	"github.com/kpmy/ot/otg"
 	"github.com/kpmy/ot/otm"
@@ -14,13 +13,8 @@ import (
 	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/assert"
-	"log"
 	"testing"
 )
-
-func init() {
-	log.SetFlags(0)
-}
 
 func TestScanner(t *testing.T) {
 	const scannerTestTemplate = `(* test template no semantic rules applied *)
@@ -42,9 +36,9 @@ func TestScanner(t *testing.T) {
 	`
 	sc := ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(scannerTestTemplate)))
 	for i := 0; sc.Error() == nil && i < 100; i++ {
-		log.Println(sc.Get())
+		t.Log(sc.Get())
 	}
-	log.Println(sc.Error())
+	t.Log(sc.Error())
 }
 
 func TestParser(t *testing.T) {
@@ -72,7 +66,7 @@ func TestParser(t *testing.T) {
 	;`
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
 	if tpl, err := p.Template(); err == nil {
-		prettyPrint(tpl)
+		prettyPrint(tpl, t)
 	} else {
 		t.Fatal(err)
 	}
@@ -96,8 +90,8 @@ func TestModel(t *testing.T) {
 	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
-		prettyPrintObject(m)
-		prettyPrintObject(m.CopyOf(otm.DEEP))
+		prettyPrintObject(m, t)
+		prettyPrintObject(m.CopyOf(otm.DEEP), t)
 	} else {
 		t.Fatal(err)
 	}
@@ -130,7 +124,7 @@ func TestModules(t *testing.T) {
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
 		if err := conv.Resolve(m); err == nil {
-			renderHtml(m)
+			renderHtml(m, t)
 		} else {
 			t.Fatal(err)
 		}
@@ -147,9 +141,9 @@ func TestBuilder(t *testing.T) {
 	b.Child(conv.Begin(br).Prod()).Child(conv.Begin(br).Child(conv.Begin(br).Prod()).Prod()).Child(conv.Begin(br0).Prod())
 	b.Value(conv.Link("null"))
 	o := b.End()
-	prettyPrintObject(o)
-	prettyPrintObject(o.CopyOf(otm.SHALLOW))
-	prettyPrintObject(o.CopyOf(otm.DEEP))
+	prettyPrintObject(o, t)
+	prettyPrintObject(o.CopyOf(otm.SHALLOW), t)
+	prettyPrintObject(o.CopyOf(otm.DEEP), t)
 }
 
 func TestContext(t *testing.T) {
@@ -186,7 +180,7 @@ func TestContext(t *testing.T) {
 			if err := conv.ResolveContext(o, nil, data); err == nil {
 				eo = o.FindById("id")
 				assert.For(eo != nil, 20)
-				log.Println("external resolved")
+				t.Log("external resolved")
 			} else {
 				t.Fatal(err)
 			}
@@ -206,7 +200,7 @@ func TestContext(t *testing.T) {
 			m := conv.Map(tpl)
 			if err := conv.Resolve(m); err == nil {
 				if err := conv.ResolveContext(m, resolver, data); err == nil {
-					prettyPrintObject(m)
+					prettyPrintObject(m, t)
 				} else {
 					t.Fatal(err)
 				}
@@ -232,14 +226,14 @@ func TestPath(t *testing.T) {
 		m := conv.Map(tpl)
 		if tr, err := trav.Trav("my~root:var:www"); err == nil {
 			if x, err := tr.Run(m, path.OBJECT); err == nil {
-				fmt.Println(x.(otm.Object))
+				t.Log(x.(otm.Object))
 			} else {
 				t.Fatal(err)
 			}
 		} else {
 			t.Fatal(err)
 		}
-		prettyPrintObject(m)
+		prettyPrintObject(m, t)
 	} else {
 		t.Fatal(err)
 	}
@@ -254,9 +248,9 @@ func TestScheme(t *testing.T) {
 		;
 	`
 	if o, err := compile(bytes.NewBufferString(schemeTemplate)); err == nil {
-		prettyPrintObject(o)
+		prettyPrintObject(o, t)
 		start := loader.Load(o)
-		testSchemaPrint(start)
+		testSchemaPrint(start, t)
 	} else {
 		t.Fatal(err)
 	}
@@ -273,7 +267,7 @@ func TestBinary(t *testing.T) {
 	if tpl, err := p.Template(); err == nil {
 		m := conv.Map(tpl)
 		if err := conv.Resolve(m); err == nil {
-			prettyPrintObject(m)
+			prettyPrintObject(m, t)
 		} else {
 			t.Fatal(err)
 		}
@@ -283,13 +277,24 @@ func TestBinary(t *testing.T) {
 
 	hw := []uint8("hello, world")
 	b := conv.Begin(otm.Qualident{Class: "z32"}).Value("hello", hw)
-	prettyPrintObject(b.End())
+	prettyPrintObject(b.End(), t)
+}
+
+func TestConcat(t *testing.T) {
+	const testTemplate = `test: "fasdfasd":'fasdfasd':09U:"end";`
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		prettyPrint(tpl, t)
+	} else {
+		t.Fatal(err)
+	}
+
 }
 
 func TestGenerate(t *testing.T) {
 	const testTemplate = `
 	html:
-		body: br awef wef "fwefwef" 22323 0.1112 49U true false nil inf -inf
+		body: br awef wef "fwef'wef" 22323 0.1112 49U true false nil inf -inf
 		;
 	;`
 
@@ -306,9 +311,15 @@ func TestGenerate(t *testing.T) {
 		if tpl0, err0 := p0.Template(); err0 == nil {
 			m0 := conv.Map(tpl0)
 			conv.Resolve(m0)
-			prettyPrintObject(m0)
+			prettyPrintObject(m0, t)
 		}
 	} else {
 		t.Fatal(err)
+	}
+	{
+		buf := bytes.NewBuffer(nil)
+		otg.ConnectTo(buf).Write(conv.Begin(otm.Qualident{Class: "test"}).Value("asdf asdf asdf `asdfasdf").Value([]uint8{0, 1, 2, 3, 4}).End())
+		s := buf.String()
+		t.Log(s)
 	}
 }

@@ -86,8 +86,33 @@ func (p *pr) block() {
 				p.emit(st)
 				p.next()
 			case ots.String:
-				p.emit(&ir.Put{Type: types.STRING, Value: p.sym.Value})
+				value := p.sym.Value
 				p.next()
+				if p.await(ots.Colon, ots.Delimiter) {
+					p.next()
+					for {
+						if p.await(ots.String, ots.Delimiter) {
+							value = value + p.sym.Value
+							p.next()
+						} else if p.is(ots.Number) {
+							typ, val := p.number()
+							if typ == types.CHAR {
+								r := []rune(value)
+								r = append(r, val.(rune))
+								value = string(r)
+							} else {
+								p.mark("concat only strings and characters")
+							}
+							p.next()
+						}
+						if p.await(ots.Colon, ots.Delimiter) {
+							p.next()
+						} else {
+							break
+						}
+					}
+				}
+				p.emit(&ir.Put{Type: types.STRING, Value: value})
 			case ots.True, ots.False, ots.Null:
 				p.emit(&ir.Put{Type: types.TRILEAN, Value: p.sym.Value})
 				p.next()

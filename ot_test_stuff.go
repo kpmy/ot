@@ -16,13 +16,13 @@ import (
 	"github.com/kpmy/ypk/halt"
 	"github.com/tv42/zbase32"
 	"io"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
+	"testing"
 )
 
-func prettyPrint(t *ir.Template) {
+func prettyPrint(t *ir.Template, log *testing.T) {
 	wr := bytes.NewBufferString("")
 	depth := 0
 	tab := func() {
@@ -69,37 +69,37 @@ func prettyPrint(t *ir.Template) {
 			halt.As(100, reflect.TypeOf(s))
 		}
 	}
-	log.Print(wr.String())
+	log.Log(wr.String())
 }
 
-func prettyPrintObject(o otm.Object) {
+func prettyPrintObject(o otm.Object, log *testing.T) {
 	parent := ""
 	for x := o.Parent(); !fn.IsNil(x); x = x.Parent() {
 		parent = fmt.Sprint(x.Qualident(), "<-", parent)
 	}
-	log.Println(parent, o.Qualident())
+	log.Log(parent, o.Qualident())
 	if o.ChildrenCount() > 0 {
-		log.Println(":")
+		log.Log(":")
 		for _x := range o.Children() {
 			switch x := _x.(type) {
 			case otm.Object:
-				prettyPrintObject(x)
+				prettyPrintObject(x, log)
 			case otm.Link:
-				log.Println("@", x.Object().Qualident())
+				log.Log("@", x.Object().Qualident())
 			case string, float64, int64, rune, tri.Trit:
-				log.Print(_x)
+				log.Log(_x)
 			case []uint8:
 				s := zbase32.EncodeToString(x)
-				log.Print("zbase32(", s, ")", x)
+				log.Log("zbase32(", s, ")", x)
 			default:
 				halt.As(100, reflect.TypeOf(x))
 			}
 		}
-		log.Println(";")
+		log.Log(";")
 	}
 }
 
-func renderHtml(o otm.Object) {
+func renderHtml(o otm.Object, log *testing.T) {
 	buf := bytes.NewBufferString("<!DOCTYPE HTML>")
 	e := xml.NewEncoder(buf)
 	var obj func(otm.Object)
@@ -135,7 +135,7 @@ func renderHtml(o otm.Object) {
 		}
 	}
 	e.Flush()
-	log.Println(buf.String())
+	log.Log(buf.String())
 }
 
 func compile(tpl io.Reader) (otm.Object, error) {

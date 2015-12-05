@@ -1,12 +1,13 @@
 package ot
 
 import (
-	"fmt"
+	zfmt "fmt"
 	"github.com/kpmy/rng/fn"
 	"github.com/kpmy/rng/schema"
 	"github.com/kpmy/rng/schema/std"
 	"github.com/kpmy/ypk/halt"
 	"reflect"
+	"testing"
 )
 
 var level int
@@ -14,64 +15,64 @@ var passed map[string]schema.Guide = make(map[string]schema.Guide)
 
 func tab() (ret string) {
 	for i := 0; i < level; i++ {
-		ret = fmt.Sprint(ret, " ")
+		ret = zfmt.Sprint(ret, " ")
 	}
 	return
 }
 
 func verbose(_g interface{}, meta ...interface{}) (ret interface{}) {
 	level++
-	fmt.Print(meta...)
+	tfmt.Println(meta...)
 	delim := " "
 	switch g := _g.(type) {
 	case schema.Start:
-		fmt.Println(tab(), "$start", g)
+		tfmt.Println(tab(), "$start", g)
 	case schema.Choice:
-		fmt.Println(tab(), "choice")
+		tfmt.Println(tab(), "choice")
 	case schema.Element:
-		fmt.Println(tab(), "$element", g.Name())
+		tfmt.Println(tab(), "$element", g.Name())
 	case schema.Attribute:
-		fmt.Println(tab(), "$attribute", g.Name())
+		tfmt.Println(tab(), "$attribute", g.Name())
 	case schema.Interleave:
-		fmt.Println(tab(), "interleave")
+		tfmt.Println(tab(), "interleave")
 	case schema.ZeroOrMore:
-		fmt.Println(tab(), "zero-or-more")
+		tfmt.Println(tab(), "zero-or-more")
 	case schema.OneOrMore:
-		fmt.Println(tab(), "one-or-more")
+		tfmt.Println(tab(), "one-or-more")
 	case schema.Optional:
-		fmt.Println(tab(), "optional")
+		tfmt.Println(tab(), "optional")
 	case schema.Group:
-		fmt.Println(tab(), "group")
+		tfmt.Println(tab(), "group")
 	case schema.AnyName:
-		fmt.Println(tab(), "any-name")
+		tfmt.Println(tab(), "any-name")
 	case schema.Except:
-		fmt.Println(tab(), "except")
+		tfmt.Println(tab(), "except")
 	case schema.NSName:
-		fmt.Println(tab(), "ns-name", g.NS())
+		tfmt.Println(tab(), "ns-name", g.NS())
 	case schema.Text:
-		fmt.Println(tab(), "text")
+		tfmt.Println(tab(), "text")
 	case schema.Data:
-		fmt.Print(tab(), "data")
+		tfmt.Println(tab(), "data")
 		if g.Type() != "" {
-			fmt.Print(" ", "type ", g.Type())
+			tfmt.Println(" ", "type ", g.Type())
 		}
-		fmt.Println()
+		tfmt.Println()
 	case schema.Value:
-		fmt.Println(tab(), "value", g.Data())
+		tfmt.Println(tab(), "value", g.Data())
 	case schema.Name:
-		fmt.Println(tab(), "name")
+		tfmt.Println(tab(), "name")
 	case schema.Empty:
-		fmt.Println(tab(), "empty")
+		tfmt.Println(tab(), "empty")
 	case schema.List:
-		fmt.Println(tab(), "list")
+		tfmt.Println(tab(), "list")
 	case schema.Mixed:
-		fmt.Println(tab(), "mixed")
+		tfmt.Println(tab(), "mixed")
 	case schema.Param:
-		fmt.Println(tab(), "param")
+		tfmt.Println(tab(), "param")
 	case schema.Ref:
-		fmt.Println(tab(), "ref", g.Name())
+		tfmt.Println(tab(), "ref", g.Name())
 	case schema.ExternalRef:
-		fmt.Println(tab(), "externalRef", g.Href())
+		tfmt.Println(tab(), "externalRef", g.Href())
 	default:
 		halt.As(100, reflect.TypeOf(g))
 	}
@@ -84,7 +85,7 @@ func verbose(_g interface{}, meta ...interface{}) (ret interface{}) {
 }
 
 func print(_g interface{}, meta ...interface{}) interface{} {
-	fmt.Println(_g)
+	tfmt.Println(_g)
 	return _g
 }
 
@@ -95,9 +96,29 @@ func elementFilter(name string) fn.Bool {
 	}
 }
 
-func testSchemaPrint(start schema.Start) {
+type formatter struct {
+	printfn func(...interface{})
+}
+
+func (f *formatter) Println(x ...interface{}) {
+	if f.printfn != nil {
+
+	}
+}
+
+var tfmt *formatter
+
+func init() {
+	tfmt = &formatter{}
+}
+
+func testSchemaPrint(start schema.Start, log *testing.T) {
+	tfmt.printfn = func(x ...interface{}) {
+		log.Log(x...)
+	}
+
 	verbose(start)
-	fmt.Println("---")
+	log.Log("---")
 	fn.Traverse(start, print)
-	fmt.Println("---")
+	log.Log("---")
 }

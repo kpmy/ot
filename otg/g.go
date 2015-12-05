@@ -5,8 +5,8 @@ import (
 	"github.com/kpmy/trigo"
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
+	"github.com/tv42/zbase32"
 	"io"
-	"log"
 	"math"
 	"reflect"
 	"strconv"
@@ -55,9 +55,63 @@ type fm struct {
 }
 
 func (f *fm) stringValue(s string) {
-	f.Char('"')
-	f.RawString(s)
-	f.Char('"')
+	first := true
+
+	rightCtrl := func(с rune) bool {
+		return int(с) == 0x9 || int(с) == 0xD || int(с) == 0xA
+	}
+
+	other := func(r rune) rune {
+		switch r {
+		case '"':
+			return '\''
+		case '\'':
+			return '`'
+		case '`':
+			return '"'
+		default:
+			panic(0)
+		}
+	}
+
+	var buf []rune
+	flush := func() {
+		if len(buf) > 0 {
+			if !first {
+				f.Char(':')
+			}
+			f.RawString(string(buf))
+			buf = nil
+			first = false
+		}
+	}
+
+	grow := func(r rune) {
+		buf = append(buf, r)
+	}
+
+	q := '`'
+	grow(q)
+	for _, c := range []rune(s) {
+		switch {
+		case c == q:
+			grow(q)
+			flush()
+			q = other(q)
+			grow(q)
+			grow(c)
+		case (int(c) < 32 && !rightCtrl(c)) || (int(c) == 0x7F):
+			grow(q)
+			flush()
+			r := strconv.FormatUint(uint64(c), 16)
+			f.RawString("0" + r + "U")
+			grow(q)
+		default:
+			grow(c)
+		}
+	}
+	grow(q)
+	flush()
 }
 
 func (f *fm) object(o otm.Object) {
@@ -76,7 +130,6 @@ func (f *fm) object(o otm.Object) {
 		f.Char(':')
 		for _x := range o.Children() {
 			f.Char(' ')
-			log.Println(_x)
 			switch x := _x.(type) {
 			case otm.Object:
 				f.object(x)
@@ -99,6 +152,8 @@ func (f *fm) object(o otm.Object) {
 				f.RawString("0" + r + "U")
 			case tri.Trit:
 				f.Trinary(x)
+			case []uint8:
+				f.RawString(zbase32.EncodeToString(x))
 			default:
 				halt.As(100, reflect.TypeOf(x))
 			}

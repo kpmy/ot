@@ -11,7 +11,6 @@ import (
 	"github.com/kpmy/ot/ots"
 	"github.com/kpmy/ypk/assert"
 	"github.com/kpmy/ypk/halt"
-	"log"
 	"strings"
 )
 
@@ -88,7 +87,7 @@ func (t *trav) compile(path string) (err error) {
 		assert.For(s != "", 21)
 		l := &level{}
 		if l.q, err = ident(s); err == nil {
-			log.Println(l.q)
+			//log.Println(l.q)
 			t.l = append(t.l, l)
 		} else {
 			break

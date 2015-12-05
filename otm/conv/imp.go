@@ -9,7 +9,6 @@ import (
 	"github.com/kpmy/ypk/fn"
 	"github.com/kpmy/ypk/halt"
 	"github.com/tv42/zbase32"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -244,7 +243,7 @@ func resolve(t *ForeignTemplate, o otm.Object) (err error) {
 			if fn := inst.apply(o); fn != nil {
 				processList = append(processList, fn)
 			}
-			log.Println("class updated for", o.Qualident(), " set ", clazz.Qualident())
+			//log.Println("class updated for", o.Qualident(), " set ", clazz.Qualident())
 		}
 		for x := range o.ChildrenObjects() {
 			upd(t, x)
