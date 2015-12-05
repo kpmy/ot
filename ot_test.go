@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/kpmy/ot/ong/loader"
+	"github.com/kpmy/ot/otg"
 	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ot/otm/conv"
 	"github.com/kpmy/ot/otm/path"
@@ -283,4 +284,31 @@ func TestBinary(t *testing.T) {
 	hw := []uint8("hello, world")
 	b := conv.Begin(otm.Qualident{Class: "z32"}).Value("hello", hw)
 	prettyPrintObject(b.End())
+}
+
+func TestGenerate(t *testing.T) {
+	const testTemplate = `
+	html:
+		body: br awef wef "fwefwef" 22323 0.1112 49U true false nil inf -inf
+		;
+	;`
+
+	p := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(testTemplate))))
+	if tpl, err := p.Template(); err == nil {
+		m := conv.Map(tpl)
+		conv.Resolve(m)
+
+		buf := bytes.NewBuffer(nil)
+		otg.ConnectTo(buf).Write(m)
+		s := buf.String()
+		t.Log(s)
+		p0 := otp.ConnectTo(ots.ConnectTo(bufio.NewReader(bytes.NewBufferString(s))))
+		if tpl0, err0 := p0.Template(); err0 == nil {
+			m0 := conv.Map(tpl0)
+			conv.Resolve(m0)
+			prettyPrintObject(m0)
+		}
+	} else {
+		t.Fatal(err)
+	}
 }
