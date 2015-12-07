@@ -323,3 +323,12 @@ func TestGenerate(t *testing.T) {
 		t.Log(s)
 	}
 }
+
+func TestLoadSave(t *testing.T) {
+	s := bytes.NewBufferString("pat: err;")
+	if o, err := Load(s); err == nil {
+		p := bytes.NewBuffer(nil)
+		Save(o, p)
+		t.Log(p.String())
+	}
+}

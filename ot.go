@@ -3,6 +3,7 @@ package ot
 import (
 	"bufio"
 	"github.com/kpmy/ot/ir"
+	"github.com/kpmy/ot/otg"
 	"github.com/kpmy/ot/otm"
 	"github.com/kpmy/ot/otm/conv"
 	"github.com/kpmy/ot/otp"
@@ -16,5 +17,11 @@ func Load(rd io.Reader) (o otm.Object, err error) {
 	if t, err = p.Template(); err == nil {
 		o = conv.Map(t)
 	}
+	return
+}
+
+func Save(o otm.Object, wr io.Writer) (err error) {
+	g := otg.ConnectTo(wr)
+	g.Write(o)
 	return
 }
