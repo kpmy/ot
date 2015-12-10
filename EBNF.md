@@ -1,8 +1,8 @@
-### ebnf grammar of o.t. language
+### ebnf грамматика для o.t.
 
-*golang ebnf-parser special syntax of escape characters and so on*
+*ebnf-схема содержит специфичные для `golang.org/x/exp/ebnf` символы экранирования и т.д.*
 
-The `Object` is start of grammar.
+Символ `Object` является стартовым. Символ `unicode letter` не описан, по смыслу он обозначает видимые символы юникода, то что определяется как `golang/unicode.isLetter()`. Требует уточнения.
 
 ````ebnf
 Object = Qid [(":" | "::") Content {WhiteSpace Content} ";"].
